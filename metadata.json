@@ -1,0 +1,5 @@
+{
+  "name": "Copy of SafeBrowse AI Toolkit",
+  "description": "An advanced child-safety engine that scans webpage and chat content for grooming, manipulation, and harmful content using Gemini AI.",
+  "requestFramePermissions": []
+}
