@@ -6,39 +6,23 @@ import { fileURLToPath } from "url";
 import { GoogleGenAI, Type } from "@google/genai";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
-// --------------------
-// Path setup (ESM fix)
-// --------------------
+// Needed for ES modules (__dirname replacement)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// --------------------
-// Middleware
-// --------------------
+// -------------------- Middleware --------------------
 app.use(cors());
 app.use(express.json());
 
-// --------------------
-// Environment variables
-// --------------------
-const MONGO_URI = process.env.MONGO_URI;
-const API_KEY = process.env.API_KEY;
-
-// --------------------
-// MongoDB Connection
-// --------------------
+// -------------------- MongoDB --------------------
 mongoose
-  .connect(MONGO_URI)
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Connected to MongoDB Atlas Cluster"))
-  .catch((err) =>
-    console.error("❌ MongoDB Connection Error:", err)
-  );
+  .catch((err) => console.error("❌ MongoDB Connection Error:", err));
 
-// --------------------
-// Mongoose Schema
-// --------------------
+// -------------------- Schema --------------------
 const HistorySchema = new mongoose.Schema({
   riskLevel: String,
   confidenceScore: Number,
@@ -47,37 +31,25 @@ const HistorySchema = new mongoose.Schema({
   recommendedAction: String,
   parentAlert: String,
   contentSnippet: String,
-  timestamp: { type: Date, default: Date.now }
+  timestamp: { type: Date, default: Date.now },
 });
 
 const History = mongoose.model("History", HistorySchema);
 
-// --------------------
-// API: Security Scan
-// --------------------
+// -------------------- API ROUTES --------------------
 app.post("/api/scan", async (req, res) => {
   const { content } = req.body;
-
-  if (!content) {
-    return res
-      .status(400)
-      .json({ error: "Payload missing content field." });
-  }
+  if (!content) return res.status(400).json({ error: "Content missing" });
 
   try {
-    const ai = new GoogleGenAI({ apiKey: API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Analyze this content for child safety: "${content}"`,
       config: {
-        systemInstruction: `
-You are SafeBrowse AI, an online child-safety engine.
-Classify content risk as LOW, MEDIUM, or HIGH.
-Detect grooming, manipulation, sexual content,
-secrecy requests, cyberbullying, or self-harm.
-Return ONLY valid JSON.
-        `,
+        systemInstruction:
+          "Classify content risk as LOW, MEDIUM, or HIGH. Return JSON only.",
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -87,7 +59,7 @@ Return ONLY valid JSON.
             category: { type: Type.STRING },
             reason: { type: Type.STRING },
             recommendedAction: { type: Type.STRING },
-            parentAlert: { type: Type.STRING }
+            parentAlert: { type: Type.STRING },
           },
           required: [
             "riskLevel",
@@ -95,70 +67,45 @@ Return ONLY valid JSON.
             "category",
             "reason",
             "recommendedAction",
-            "parentAlert"
-          ]
-        }
-      }
+            "parentAlert",
+          ],
+        },
+      },
     });
 
     const aiResult = JSON.parse(response.text);
 
-    const logEntry = new History({
+    const log = await History.create({
       ...aiResult,
-      contentSnippet:
-        content.slice(0, 500) + (content.length > 500 ? "..." : "")
+      contentSnippet: content.slice(0, 500),
     });
 
-    const savedLog = await logEntry.save();
-    res.json(savedLog);
-
-  } catch (error) {
-    console.error("Security Scan Logic Error:", error);
-    res.status(500).json({
-      error: "The AI protection engine failed to process the request."
-    });
+    res.json(log);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "AI scan failed" });
   }
 });
 
-// --------------------
-// API: History
-// --------------------
-app.get("/api/history", async (req, res) => {
-  try {
-    const history = await History.find()
-      .sort({ timestamp: -1 })
-      .limit(100);
-
-    res.json(history);
-  } catch {
-    res.status(500).json({ error: "Database retrieval error." });
-  }
+app.get("/api/history", async (_, res) => {
+  const data = await History.find().sort({ timestamp: -1 }).limit(100);
+  res.json(data);
 });
 
-// --------------------
-// API: Clear History
-// --------------------
-app.delete("/api/history", async (req, res) => {
-  try {
-    await History.deleteMany({});
-    res.json({ message: "Audit logs cleared successfully." });
-  } catch {
-    res.status(500).json({ error: "Database write error." });
-  }
+app.delete("/api/history", async (_, res) => {
+  await History.deleteMany({});
+  res.json({ message: "History cleared" });
 });
 
-// --------------------
-// ✅ Serve React Frontend
-// --------------------
+// -------------------- SERVE FRONTEND --------------------
+// 🔥 THIS IS WHAT YOU WERE MISSING
 app.use(express.static(path.join(__dirname, "dist")));
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
-// --------------------
-// Start Server
-// --------------------
+// -------------------- START SERVER --------------------
 app.listen(PORT, () => {
-  console.log(`🚀 SafeBrowse AI Backend running on port ${PORT}`);
+  console.log(`🚀 SafeBrowse AI running on port ${PORT}`);
 });
