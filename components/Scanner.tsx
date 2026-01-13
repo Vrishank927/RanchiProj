@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
-import { ScanResult, RecommendedAction, RiskLevel } from '../types';
+import { ScanResult, RecommendedAction, RiskLevel, RiskType } from '../types';
 
 interface ScannerProps {
   onScanComplete: (result: ScanResult) => void;
@@ -64,13 +64,13 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete }) => {
             </div>
             Safety Analyzer
           </h2>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded">V2.4 Native</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded">V2.6 Protekt</span>
         </div>
         
         <div className="relative">
           <textarea
             className="w-full h-44 p-5 bg-slate-50/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all resize-none text-slate-700 placeholder-slate-400 font-medium leading-relaxed"
-            placeholder="Paste text snippets, chat logs, or URLs to analyze... &#10;&#10;Example: 'Hey, don't tell your parents we are talking about this...'"
+            placeholder="Paste text, URLs, or chat logs... &#10;&#10;Ex: 'Hey, don't tell your mom we're playing this game...'"
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
@@ -122,53 +122,80 @@ export const Scanner: React.FC<ScannerProps> = ({ onScanComplete }) => {
 
       {result && (
         <div className="border-t border-slate-100 bg-slate-50/50 p-7 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {result.recommendedAction === RecommendedAction.BLOCK && (
-            <div className="mb-6 p-4 bg-rose-600 text-white rounded-xl shadow-lg shadow-rose-200 flex items-center gap-4">
-              <div className="bg-white/20 p-2.5 rounded-lg">
-                <i className="fas fa-hand text-xl"></i>
-              </div>
-              <div>
-                <div className="font-bold text-sm uppercase tracking-wider">Critical Block Triggered</div>
-                <div className="text-xs opacity-80 font-medium">Content contains restricted elements. Safety measures active.</div>
-              </div>
-            </div>
-          )}
+          
+          {/* Risk Type Identifier */}
+          <div className="mb-6 flex items-center gap-3">
+            <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+              result.riskType === RiskType.PHISHING ? 'bg-rose-600 text-white border-rose-700' :
+              result.riskType === RiskType.GROOMING ? 'bg-indigo-600 text-white border-indigo-700' :
+              'bg-slate-800 text-white border-slate-900'
+            }`}>
+              <i className={`fas ${
+                result.riskType === RiskType.PHISHING ? 'fa-fish-fins' :
+                result.riskType === RiskType.GROOMING ? 'fa-user-shield' :
+                'fa-shield-heart'
+              } mr-2`}></i>
+              {result.riskType} Detected
+            </span>
+            {result.signalsDetected && result.signalsDetected.map(sig => (
+              <span key={sig} className="px-2 py-1 bg-white border border-slate-200 rounded-md text-[9px] font-bold text-slate-500 uppercase">
+                {sig.replace('_', ' ')}
+              </span>
+            ))}
+          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className={`p-4 rounded-xl border ${getRiskUI(result.riskLevel).bg} ${getRiskUI(result.riskLevel).border} transition-all hover:scale-[1.02]`}>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className={`p-4 rounded-xl border ${getRiskUI(result.riskLevel).bg} ${getRiskUI(result.riskLevel).border} transition-all`}>
               <div className="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-widest flex items-center gap-1.5">
                 <i className={`fas ${getRiskUI(result.riskLevel).icon} ${getRiskUI(result.riskLevel).color}`}></i>
-                Risk Level
+                Severity
               </div>
               <div className={`text-xl font-black ${getRiskUI(result.riskLevel).color}`}>{result.riskLevel}</div>
             </div>
-
-            <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:scale-[1.02]">
-              <div className="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-widest">AI Confidence</div>
-              <div className="flex items-center gap-2.5">
-                <div className="text-xl font-black text-slate-800">{(result.confidenceScore * 100).toFixed(0)}%</div>
-                <div className="flex-1 bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                   <div 
-                    className="h-full bg-teal-500 rounded-full"
-                    style={{ width: `${result.confidenceScore * 100}%` }}
-                   ></div>
-                </div>
-              </div>
+            <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
+              <div className="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-widest text-center">Safety Action</div>
+              <div className="text-xl font-black text-slate-800 text-center uppercase tracking-tighter">{result.recommendedAction}</div>
             </div>
           </div>
 
-          <div className="mt-4 p-5 rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-50">
-              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Analysis Insight</div>
-              <div className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{result.category}</div>
-            </div>
-            <p className="text-sm text-slate-600 leading-relaxed font-medium">
-              <i className="fas fa-quote-left text-slate-200 mr-2"></i>
-              {result.reason}
-            </p>
-            <div className="mt-4 flex items-center gap-2 pt-3 border-t border-slate-50">
-              <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-              <span className="text-[11px] font-bold text-slate-500">Recommended: <span className="text-slate-800">{result.recommendedAction}</span></span>
+          {/* Intervention Logic */}
+          <div className="space-y-4">
+            {/* Phishing Warning Logic */}
+            {result.riskType === RiskType.PHISHING && (
+              <div className="p-5 bg-rose-600 text-white rounded-2xl shadow-lg border-b-4 border-rose-800">
+                <div className="flex items-center gap-3 mb-2">
+                  <i className="fas fa-circle-exclamation text-xl"></i>
+                  <h3 className="font-black text-sm uppercase tracking-wider">Fake Website Alert</h3>
+                </div>
+                <p className="text-xs font-medium opacity-90 leading-relaxed">
+                  This site is pretending to be something else to trick you. Never enter passwords or personal info here.
+                </p>
+              </div>
+            )}
+
+            {/* Educational Moment */}
+            <div className="p-5 bg-white border-2 border-indigo-100 rounded-2xl shadow-sm relative overflow-hidden group">
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="bg-indigo-600 p-1.5 rounded-lg">
+                  <i className="fas fa-graduation-cap text-white text-xs"></i>
+                </div>
+                <h3 className="text-sm font-black text-slate-800 uppercase tracking-wide">Safety Insight</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-indigo-50/50 p-3.5 rounded-xl border border-indigo-100/50">
+                  <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1.5">The Risk</h4>
+                  <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                    {result.safetyConsequences}
+                  </p>
+                </div>
+                <div className="bg-emerald-50/50 p-3.5 rounded-xl border border-emerald-100/50">
+                  <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1.5">What to do</h4>
+                  <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                    {result.educationalGuidance}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

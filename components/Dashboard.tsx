@@ -45,7 +45,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ history }) => {
 
   return (
     <div className="space-y-6">
-      {/* Summary Insights */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Safety Index</div>
@@ -79,7 +78,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ history }) => {
               </div>
               Incident Timeline
             </h2>
-            <p className="text-xs text-slate-500 mt-1 font-medium">Detailed audit log for parental supervision</p>
+            <p className="text-xs text-slate-500 mt-1 font-medium">Detailed audit log with educational context</p>
           </div>
           
           <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
@@ -152,7 +151,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ history }) => {
                       <tr className="bg-indigo-50/20">
                         <td colSpan={5} className="px-7 py-8 animate-in fade-in zoom-in-95 duration-300">
                           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                            <div className="lg:col-span-7 space-y-5">
+                            <div className="lg:col-span-7 space-y-6">
                               <div>
                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                                   <i className="fas fa-align-left text-slate-300"></i> Source Content Log
@@ -161,17 +160,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ history }) => {
                                   "{item.contentSnippet}"
                                 </div>
                               </div>
-                              <div className="flex gap-6">
-                                <div className="flex-1">
-                                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Confidence Score</h4>
-                                  <div className="h-1.5 bg-slate-200 rounded-full w-full overflow-hidden">
-                                    <div className="h-full bg-indigo-500" style={{ width: `${item.confidenceScore * 100}%` }}></div>
+                              <div className="bg-indigo-900 p-5 rounded-2xl text-indigo-50 shadow-lg relative overflow-hidden group">
+                                <i className="fas fa-graduation-cap absolute -bottom-4 -right-4 text-6xl opacity-10 group-hover:rotate-12 transition-transform duration-700"></i>
+                                <h4 className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mb-3">AI Education Log</h4>
+                                <div className="space-y-4">
+                                  <div>
+                                    <h5 className="text-[9px] font-black text-indigo-400 uppercase mb-1">Security Consequence Summary</h5>
+                                    <p className="text-xs leading-relaxed opacity-90">{item.safetyConsequences}</p>
                                   </div>
-                                  <div className="mt-1 text-xs font-bold text-slate-800">{(item.confidenceScore * 100).toFixed(1)}% Certainty</div>
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Threat Vector</h4>
-                                  <div className="text-sm font-black text-indigo-600 bg-indigo-50 px-3 py-1 rounded-lg inline-block uppercase tracking-wider">{item.category}</div>
+                                  <div className="pt-3 border-t border-indigo-800">
+                                    <h5 className="text-[9px] font-black text-emerald-400 uppercase mb-1">Guided Safe Alternative</h5>
+                                    <p className="text-xs leading-relaxed text-emerald-100">{item.educationalGuidance}</p>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -180,12 +180,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ history }) => {
                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                                   <i className="fas fa-brain text-slate-300"></i> AI Reasoning Insight
                                 </h4>
-                                <div className="p-4 bg-indigo-900 text-indigo-100 rounded-xl text-xs font-medium leading-relaxed shadow-md">
+                                <div className="p-4 bg-white border border-slate-200 rounded-xl text-xs font-medium leading-relaxed shadow-sm text-slate-600">
                                   {item.reason}
                                 </div>
                               </div>
                               <div className="p-4 bg-white border border-indigo-100 rounded-xl border-l-4 border-l-indigo-500 shadow-sm">
-                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Recommended Response</h4>
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Parent Alert Message</h4>
                                 <p className="text-xs text-slate-800 font-bold">{item.parentAlert}</p>
                               </div>
                             </div>

@@ -1,21 +1,17 @@
 {
-  "name": "safebrowse-ai-toolkit",
+  "name": "copy-of-safebrowse-ai-toolkit",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "start": "node server.js",
     "preview": "vite preview"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "mongoose": "^8.0.0",
-    "cors": "^2.8.5",
-    "@google/genai": "^1.34.0",
+    "react-dom": "^19.2.3",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "@google/genai": "^1.34.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
@@ -24,4 +20,3 @@
     "vite": "^6.2.0"
   }
 }
-
